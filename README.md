@@ -3,6 +3,8 @@
 
 **Author:** Jaskirat Singh Maskeen
 
+## Report: [`TakeHomeA1_Jaskirat.pdf`](./TakeHomeA1_Jaskirat.pdf)
+
 ## Setup and Installation
 It is recommended to use `uv` or `venv` to create a virtual environment for the project.
 
