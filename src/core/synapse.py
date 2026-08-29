@@ -12,11 +12,13 @@ class SparseDendriticSynapse(nn.Module):
         priors_dict,
         is_sensory_input=False,
         weight_scale=10.0,
+        U=0.2,
     ):
         super().__init__()
         self.raw_weights = nn.Parameter(torch.empty(out_features, in_features))
         nn.init.kaiming_uniform_(self.raw_weights, a=math.sqrt(5))
         self.raw_weights.data *= weight_scale
+        self.U = U
 
         mask = torch.ones(in_features)
         if not is_sensory_input:
@@ -61,18 +63,17 @@ class SparseDendriticSynapse(nn.Module):
         # Short-Term Depression (Neurotransmitter Depletion)
         # Spiking depletes resources by a utilization factor
         # Resources recover towards 1.0 with tau_d (recovery rate = 0.05)
-        U = 0.2
         recovery_rate = 0.05
         
-        released_transmitter = stp_state * U * pre_spikes
+        released_transmitter = stp_state * self.U * pre_spikes
 
         new_stp_state = (
             stp_state + recovery_rate * (1.0 - stp_state) - released_transmitter
         )
 
         # Current is proportional to the released transmitter.
-        # We multiply by (1.0 / U) so that the initial spike (when stp_state=1.0)
+        # We multiply by (1.0 / self.U) so that the initial spike (when stp_state=1.0)
         # produces the exact same current magnitude as the network did before STP was added.
-        current = F.linear(released_transmitter, effective_weights) * (1.0 / U)
+        current = F.linear(released_transmitter, effective_weights) * (1.0 / self.U)
 
         return current, new_stp_state

@@ -33,6 +33,21 @@ def main():
         default="experiment_results",
         help="Directory for reports and outputs",
     )
+    parser.add_argument(
+        "--lambda-constant", type=float, default=150.0, help="Length constant for distance attenuation"
+    )
+    parser.add_argument(
+        "--tau-m", type=float, default=20.0, help="Membrane time constant"
+    )
+    parser.add_argument(
+        "--U", type=float, default=0.2, help="Neurotransmitter utilization factor"
+    )
+    parser.add_argument(
+        "--gamma", type=float, default=0.02, help="Threshold jump"
+    )
+    parser.add_argument(
+        "--surrogate-k", type=float, default=25.0, help="Surrogate gradient slope"
+    )
 
     args = parser.parse_args()
 
@@ -42,6 +57,11 @@ def main():
         weight_scale=args.weight_scale,
         output_neurons=args.output_neurons,
         output_dir=args.output_dir,
+        lambda_constant=args.lambda_constant,
+        tau_m=args.tau_m,
+        U=args.U,
+        gamma=args.gamma,
+        surrogate_k=args.surrogate_k,
     )
 
     pipeline.run_mnist_experiment()

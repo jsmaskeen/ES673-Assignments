@@ -73,13 +73,13 @@ def run_ann_baseline(epochs=15, output_dir="experiment_results"):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
     
     ax1.plot(loss_hist, color='blue', marker='o', label='ANN Loss')
-    ax1.set_title("ANN Training Loss", fontweight='bold')
+    ax1.set_title("ANN Training Loss")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Cross Entropy Loss")
     ax1.grid(True, linestyle='--', alpha=0.5)
     
     ax2.plot(acc_hist, color='green', marker='o', label='ANN Accuracy')
-    ax2.set_title("ANN Training Accuracy", fontweight='bold')
+    ax2.set_title("ANN Training Accuracy")
     ax2.set_xlabel("Epoch")
     ax2.set_ylabel("Accuracy (%)")
     ax2.grid(True, linestyle='--', alpha=0.5)
@@ -90,6 +90,28 @@ def run_ann_baseline(epochs=15, output_dir="experiment_results"):
     plt.close()
     
     print(f"ANN metrics plot saved to {plot_path}")
+    
+    # Plot Weight Distribution (Equivalent to Dale's Law Plot for SNN)
+    weights = model.network[0].weight.data.cpu().numpy().flatten()
+    pos_weights = weights[weights >= 0]
+    neg_weights = weights[weights < 0]
+    
+    plt.figure(figsize=(10, 5))
+    plt.hist(pos_weights, bins=50, color='crimson', alpha=0.7, label='Positive Weights (+)')
+    plt.hist(neg_weights, bins=50, color='royalblue', alpha=0.7, label='Negative Weights (-)')
+    plt.title("ANN Baseline: Weight Distribution", fontsize=14, fontweight="bold")
+    plt.xlabel("Synaptic Weight")
+    plt.ylabel("Frequency")
+    plt.axvline(0, color='black', linestyle='-', linewidth=2)
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.3)
+    plt.tight_layout()
+    dist_plot_path = os.path.join(output_dir, "ann_weight_distribution.png")
+    plt.savefig(dist_plot_path)
+    plt.close()
+    
+    print(f"ANN weight distribution plot saved to {dist_plot_path}")
+
     print("\nBaseline execution complete!")
 
 if __name__ == "__main__":

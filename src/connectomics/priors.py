@@ -4,7 +4,7 @@ from scipy.spatial.distance import cdist
 import pandas as pd
 
 
-def get_microns_priors(n_in, n_out,seed=42):
+def get_microns_priors(n_in, n_out, seed=42, lambda_constant=150.0):
     soma_cols = [
         "id",
         "valid",
@@ -67,7 +67,6 @@ def get_microns_priors(n_in, n_out,seed=42):
 
     distance_matrix_um = cdist(layer_out_pos, layer_in_pos)
 
-    lambda_constant = 150.0  # for 1mm volume
     attenuation_matrix = np.exp(-distance_matrix_um / lambda_constant)
     attenuation_matrix[distance_matrix_um > 5 * lambda_constant] = 0.0
 

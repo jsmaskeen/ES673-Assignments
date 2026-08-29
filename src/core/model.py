@@ -13,6 +13,10 @@ class ModifiedPerceptronClassifier(nn.Module):
         priors_l1=None,
         priors_l2=None,
         weight_scale=10.0,
+        tau_m=20.0,
+        U=0.2,
+        gamma=0.02,
+        surrogate_k=25.0,
     ):
         super().__init__()
 
@@ -23,8 +27,11 @@ class ModifiedPerceptronClassifier(nn.Module):
             priors_l1,
             is_sensory_input=True,
             weight_scale=weight_scale,
+            U=U,
         )
-        self.layer1 = BioPerceptronNeuron(input_dim, hidden_dim, priors_l1)
+        self.layer1 = BioPerceptronNeuron(
+            input_dim, hidden_dim, priors_l1, tau_m=tau_m, gamma=gamma, surrogate_k=surrogate_k
+        )
         self.layer1.synapse = self.synapse1
 
         # Layer 2 is an internal layer
@@ -34,8 +41,11 @@ class ModifiedPerceptronClassifier(nn.Module):
             priors_l2,
             is_sensory_input=False,
             weight_scale=weight_scale,
+            U=U,
         )
-        self.layer2 = BioPerceptronNeuron(hidden_dim, output_dim, priors_l2)
+        self.layer2 = BioPerceptronNeuron(
+            hidden_dim, output_dim, priors_l2, tau_m=tau_m, gamma=gamma, surrogate_k=surrogate_k
+        )
         self.layer2.synapse = self.synapse2
         self.layer2.synapse = self.synapse2
 

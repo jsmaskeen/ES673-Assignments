@@ -28,6 +28,12 @@ class ModifiedPerceptronPipeline:
         output_neurons=10,
         output_dir="experiment_results",
         seed=42,
+        lambda_constant=150.0,
+        tau_m=20.0,
+        U=0.2,
+        gamma=0.02,
+        surrogate_k=25.0,
+        plot=True
     ):
         self.time_steps = time_steps
         self.epochs = epochs
@@ -36,11 +42,17 @@ class ModifiedPerceptronPipeline:
         self.output_dir = output_dir
         self.analyzer = PerformanceAnalyzer(output_dir=output_dir)
         self.seed = seed
+        self.lambda_constant = lambda_constant
+        self.tau_m = tau_m
+        self.U = U
+        self.gamma = gamma
+        self.surrogate_k = surrogate_k
+        self.plot = plot
 
     def run_mnist_experiment(self):
         print("Fetching Biological Priors from MICrONS")
-        priors_l1 = get_microns_priors(n_in=784, n_out=128,seed=self.seed)
-        priors_l2 = get_microns_priors(n_in=128, n_out=self.output_neurons,seed=self.seed)
+        priors_l1 = get_microns_priors(n_in=784, n_out=128,seed=self.seed, lambda_constant=self.lambda_constant)
+        priors_l2 = get_microns_priors(n_in=128, n_out=self.output_neurons,seed=self.seed, lambda_constant=self.lambda_constant)
 
         print("Initializing Modified Perceptron Model")
         model = ModifiedPerceptronClassifier(
@@ -50,6 +62,10 @@ class ModifiedPerceptronPipeline:
             priors_l1=priors_l1,
             priors_l2=priors_l2,
             weight_scale=self.weight_scale,
+            tau_m=self.tau_m,
+            U=self.U,
+            gamma=self.gamma,
+            surrogate_k=self.surrogate_k,
         ).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         train_loader, test_loader = get_mnist_loaders(batch_size=64)
@@ -111,7 +127,7 @@ class ModifiedPerceptronPipeline:
                 f"Epoch {epoch:02d}/{self.epochs} | Loss: {avg_loss:.4f} | Accuracy: {acc:.2f}% | Spikes: {avg_spikes_per_sample:.1f}"
             )
 
-            if epoch == 1 or epoch == self.epochs:
+            if (epoch == 1 or epoch == self.epochs) and self.plot:
                 plot_input_and_output_rasters(
                     input_spikes, output_spikes, f"MNIST (Epoch {epoch})"
                 )
@@ -122,32 +138,36 @@ class ModifiedPerceptronPipeline:
                 shadow_path = os.path.join(
                     self.output_dir, f"shadows_epoch_{epoch}.png"
                 )
-                plot_mnist_shadows(W1_eff, W2_eff, filename=shadow_path)
-
-        plot_metrics(loss_hist, acc_hist, "MNIST")
-        plot_weight_trends(weight_hist, "MNIST L2")
+                if self.plot:
+                    plot_mnist_shadows(W1_eff, W2_eff, filename=shadow_path)
+        if self.plot:
+            plot_metrics(loss_hist, acc_hist, "MNIST")
+            plot_weight_trends(weight_hist, "MNIST L2")
 
         dales_law_path = os.path.join(self.output_dir, "dales_law_distribution.png")
         # Layer 1 raw weights
-        plot_dales_law_histogram(
-            model.layer1.synapse.raw_weights,
-            priors_l1["pre_is_exc"],
-            filename=dales_law_path,
-        )
+        if self.plot:
+            plot_dales_law_histogram(
+                model.layer1.synapse.raw_weights,
+                priors_l1["pre_is_exc"],
+                filename=dales_law_path,
+            )
 
         spatial_priors_path = os.path.join(self.output_dir, "spatial_priors.png")
-        plot_spatial_priors(
-            model.layer1.synapse.attenuation,
-            model.layer1.synapse.adjacency,
-            filename=spatial_priors_path,
-        )
+        if self.plot:
+            plot_spatial_priors(
+                model.layer1.synapse.attenuation,
+                model.layer1.synapse.adjacency,
+                filename=spatial_priors_path,
+            )
 
         W1_eff = model.layer1.synapse.get_effective_weights()
         W2_eff = model.layer2.synapse.get_effective_weights()
 
         if self.output_neurons == 10:
             shadow_path = os.path.join(self.output_dir, "shadows_final.png")
-            plot_mnist_shadows(W1_eff, W2_eff, filename=shadow_path)
+            if self.plot:
+                plot_mnist_shadows(W1_eff, W2_eff, filename=shadow_path)
         else:
             print(
                 f"Skipping Receptive Field shadow plotting because output_neurons={self.output_neurons} (expects 10)."
@@ -193,31 +213,33 @@ class ModifiedPerceptronPipeline:
                 total_samples += images.size(0)
 
         all_hidden_features = torch.cat(all_hidden_features, dim=0)
-
-        plot_confusion_matrix(
-            all_targets,
-            all_preds,
-            filename=os.path.join(self.output_dir, "confusion_matrix.png"),
-        )
+        if self.plot:
+            plot_confusion_matrix(
+                all_targets,
+                all_preds,
+                filename=os.path.join(self.output_dir, "confusion_matrix.png"),
+            )
 
         total_spikes_per_neuron = all_hidden_features.sum(dim=0)
-        plot_sparsity_histogram(
-            total_spikes_per_neuron,
-            filename=os.path.join(self.output_dir, "sparsity_histogram.png"),
-        )
+        if self.plot:
+            plot_sparsity_histogram(
+                total_spikes_per_neuron,
+                filename=os.path.join(self.output_dir, "sparsity_histogram.png"),
+            )
 
         subset_idx = torch.randperm(all_hidden_features.size(0))[:1000]
-        plot_pca_representations(
-            all_hidden_features[subset_idx],
-            torch.tensor(all_targets)[subset_idx],
-            filename=os.path.join(self.output_dir, "pca_representations.png"),
-        )
-
-        plot_weight_distance_correlation(
-            model.layer1.synapse.raw_weights,
-            model.layer1.synapse.attenuation,
-            filename=os.path.join(self.output_dir, "weight_distance_correlation.png"),
-        )
+        if self.plot:
+            plot_pca_representations(
+                all_hidden_features[subset_idx],
+                torch.tensor(all_targets)[subset_idx],
+                filename=os.path.join(self.output_dir, "pca_representations.png"),
+            )
+        if self.plot:
+            plot_weight_distance_correlation(
+                model.layer1.synapse.raw_weights,
+                model.layer1.synapse.attenuation,
+                filename=os.path.join(self.output_dir, "weight_distance_correlation.png"),
+            )
 
         model_path = os.path.join(self.output_dir, "model.pth")
         torch.save(model.state_dict(), model_path)

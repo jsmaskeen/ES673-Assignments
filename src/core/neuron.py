@@ -19,7 +19,7 @@ class FastSigmoidSurrogate(torch.autograd.Function):
 
 class BioPerceptronNeuron(nn.Module):
     def __init__(
-        self, in_features, out_features, priors_dict, tau_m=20.0, tau_theta=50.0
+        self, in_features, out_features, priors_dict, tau_m=20.0, tau_theta=50.0, gamma=0.02, surrogate_k=25.0
     ):
         super().__init__()
         self.out_features = out_features
@@ -27,7 +27,8 @@ class BioPerceptronNeuron(nn.Module):
         self.decay_theta = math.exp(-1.0 / tau_theta)
 
         self.noise_std = 0.02
-        self.gamma_glia = 0.02
+        self.gamma = gamma
+        self.surrogate_k = surrogate_k
         self.theta_0 = 0.5
         self.theta_exc = 0.05
         self.theta_inh = 0.05
@@ -79,13 +80,13 @@ class BioPerceptronNeuron(nn.Module):
                 thresholds_hist.append(dynamic_threshold.clone())
                 stp_hist.append(stp_state.clone())
 
-            spike_t = FastSigmoidSurrogate.apply(membrane_potential, dynamic_threshold)
+            spike_t = FastSigmoidSurrogate.apply(membrane_potential, dynamic_threshold, self.surrogate_k)
             spikes.append(spike_t)
 
             dynamic_threshold = (
                 self.theta_0
                 + (dynamic_threshold - self.theta_0) * self.decay_theta
-                + self.gamma_glia * spike_t
+                + self.gamma * spike_t
             ).detach()
 
             membrane_potential = membrane_potential * (1.0 - spike_t.detach())
