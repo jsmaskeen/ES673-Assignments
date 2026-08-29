@@ -41,5 +41,10 @@ To run automated 1D sweeps across the various biological constants to observe th
 python sweep_experiments.py --epochs 10 --time-steps 20
 ```
 
+### 4. Test Sample
+```bash
+python python -m src.test_model --sample 4
+```
+
 ## Results
 All experimental outputs, diagnostic plots, and saved models are automatically generated and stored in the **`experiment_results/`** directory.
