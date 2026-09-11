@@ -7,4 +7,4 @@
 |S. No.|Assignment|GitHub Link|
 |--|--|--|
 |1.|Bio Inspired Perceptron |[assn1](../../tree/assn1)|
-|2.|Forward-Forward vs. NoProp |[assn2](./.../tree/assn2)|
+|2.|Forward-Forward vs. NoProp |[assn2](https://github.com/jsmaskeen/ES673-Assignments/tree/assn2)|
