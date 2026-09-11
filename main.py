@@ -126,7 +126,7 @@ def parse_args():
         type=str,
         default="iso-parameter",
         choices=["iso-parameter", "optimised", "optimized"],
-        help="Configuration preset: 'iso-parameter' (~567k matched params across all models) or 'optimised'/'optimized' (small efficient ~230k params while preserving accuracy within +-1%).",
+        help="Configuration preset: 'iso-parameter' (~567k matched params across all models) or 'optimised'/'optimized' (small efficient ~230k params while preserving accuracy within +-1%%).",
     )
     parser.add_argument(
         "--include-unsupervised-ff",
