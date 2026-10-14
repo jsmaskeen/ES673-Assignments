@@ -1,0 +1,14 @@
+torch
+transformers
+datasets
+accelerate
+huggingface_hub
+matplotlib
+seaborn
+pandas
+pyarrow
+scikit-learn
+scipy
+umap-learn
+tqdm
+sentencepiece

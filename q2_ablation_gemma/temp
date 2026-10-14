@@ -1,0 +1,58 @@
+## 4. Downstream Behavioral Benchmark Tasks
+
+To evaluate the functional impact of each lesion, we deploy a tripartite benchmark suite spanning generative fluency, affective semantics, and hierarchical syntactic parsing.
+
+| Benchmark Task | Dataset & Protocol | Evaluated Metrics | Diagnostic Role |
+| :--- | :--- | :--- | :--- |
+| **1. Predictive Fluency** | **WikiText-2** (Validation)<br>Sliding window ($W=512$, stride $S=256$) | • Perplexity: $\text{PPL} = \exp(\text{NLL})$<br>• Bits-per-character (BPC) | Global generative coherence & next-token prediction |
+| **2. Semantic Valence** | **Stanford IMDB** (Test Split)<br>Zero-shot generative forced choice | • Binary Accuracy: $\mathbb{I}[\arg\max_{c} P(c) = y_{\text{gold}}]$<br>• Margin: $\Delta\text{LP} = \ln P(c_{\text{gold}}) - \ln P(c_{\text{distractor}})$ | High-level semantic sentiment representation |
+| **3. Structural Parsing** | **Psycholinguistic Minimal Pairs**<br>Garden-path & SVA with attractors | • Garden-Path Ratio: $\frac{\text{Surprisal}(\text{Verb}_{\text{amb}})}{\text{Surprisal}(\text{Verb}_{\text{unamb}})}$<br>• Attractor Accuracy: $\mathbb{I}[P(v_{\text{agree}}) > P(v_{\text{mismatch}})]$ | Hierarchical syntax & long-range binding circuits |
+
+---
+
+### Task 1: General Fluency & Predictive Capacity (WikiText-2)
+* **Dataset & Protocol:** Evaluated on the WikiText-2 validation set (200k+ tokens) using a sliding-window context of $W = 512$ tokens with stride $S = 256$:
+  $$\text{NLL} = -\frac{1}{N} \sum_{i=1}^N \ln P(w_i \mid w_{<i}), \qquad \text{PPL} = \exp(\text{NLL}), \qquad \text{BPC} = \frac{\text{NLL}}{\ln(2) \cdot \text{Chars-Per-Token}}$$
+* **Diagnostic Role:** Functions as an unconstrained global health check on output distribution coherence; sensitive to any perturbation degrading next-token language modeling.
+
+---
+
+### Task 2: Semantic Valence & Affective Discrimination (IMDB)
+* **Dataset & Protocol:** Evaluated on Stanford IMDB polarized reviews using a zero-shot generative forced-choice format without task fine-tuning:
+  $$\text{Prompt: } \text{"Review: } \{x\} \text{ \nQuestion: Is the overall sentiment positive or negative? \nAnswer: "}$$
+* **Metrics:** 
+  1. *Classification Accuracy:* $\text{Acc} = \mathbb{I}\!\left[\arg\max_{c \in \{\text{pos},\, \text{neg}\}} P(c \mid \text{prompt}) = y_{\text{gold}}\right]$
+  2. *Log-Probability Margin:* $\Delta\text{LP} = \ln P(c_{\text{gold}} \mid \text{prompt}) - \ln P(c_{\text{distractor}} \mid \text{prompt})$
+* **Diagnostic Role:** Probes whether high-level semantic sentiment survives circuit lesions, isolating diffuse lexical-thematic representations from surface generative fluency.
+
+---
+
+### Task 3: Grammar and Sentence Structure (Minimal Pairs)
+
+To test whether ablating parts of the model breaks its grasp of sentence structure, we evaluate it on two grammar tasks using carefully matched sentence pairs.
+
+#### 1. Garden-Path Sentences (Clause Boundary Confusion)
+
+A garden-path sentence temporarily tricks the reader into the wrong interpretation before forcing them to rethink the sentence:
+> **Ambiguous:** *"While the woman danced the crowd watched quietly."*  
+> **Clear (with comma):** *"While the woman danced, the crowd watched quietly."*
+
+In the ambiguous sentence, reading *"While the woman danced the crowd..."* makes it feel like the crowd is what she danced with. But when you hit the word *"watched"*, you realize *"the crowd"* is actually the one doing the watching. That moment of confusion creates a sharp spike in the model's prediction error (surprisal). The comma in the clear version prevents this confusion from happening in the first place.
+
+If the model understands grammar, it should find the verb *"watched"* much more surprising in the ambiguous sentence than in the comma version. If an ablation damages its ability to track sentence structure, it won't even notice the confusion, and that surprise difference disappears:
+
+$$\text{Disruption Ratio} = \frac{\text{Surprisal}(\text{Verb}_{\text{ambiguous}})}{\text{Surprisal}(\text{Verb}_{\text{unambiguous}})}$$
+
+A ratio above 1.0 means the model noticed the confusion. A ratio dropping down to 1.0 means its grammar tracking has broken down.
+
+#### 2. Subject-Verb Agreement with Distractor Words
+This task tests whether the model can match a singular subject to a singular verb when a plural word sits right between them:
+> *"The author of the books was / were acclaimed."*
+
+The subject is *"The author"* (singular), so the correct verb is *"was"*. But the word *"books"* (plural) sits right next to the verb, which can easily mislead the model into predicting *"were"*. 
+
+An intact model connects the verb back to *"author"* and picks *"was"*. If an ablation disrupts the model's grammar tracking, it gets fooled by the nearby word *"books"* and chooses the wrong verb:
+
+$$\text{Accuracy} = \mathbb{I}\!\left[P(\text{was} \mid \text{context}) > P(\text{were} \mid \text{context})\right]$$
+
+* **Why we run both tests:** Together, these two tasks test whether the model is actually following the grammar of the sentence, rather than just guessing based on nearby words or overall topic.

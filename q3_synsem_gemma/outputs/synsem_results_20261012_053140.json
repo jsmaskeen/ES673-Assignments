@@ -1,0 +1,77 @@
+{
+  "causal_dissociation": {
+    "task": "causal_dissociation",
+    "conditions": [
+      {
+        "condition": "Baseline (Intact)",
+        "surgery_type": "none",
+        "severity": 0.0,
+        "position": "random",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.88,
+        "stsb_peak_semantic_rho": 0.285904939031786,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "Early Layers Ablated (0..6)",
+        "surgery_type": "layers",
+        "severity": 0.25,
+        "position": "early",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.6,
+        "stsb_peak_semantic_rho": 0.285904939031786,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "Middle Layers Ablated (10..16)",
+        "surgery_type": "layers",
+        "severity": 0.25,
+        "position": "middle",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.74,
+        "stsb_peak_semantic_rho": 0.285904939031786,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "Late Layers Ablated (20..26)",
+        "surgery_type": "layers",
+        "severity": 0.25,
+        "position": "late",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.68,
+        "stsb_peak_semantic_rho": 0.285904939031786,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "Q-Heads Ablated (50%)",
+        "surgery_type": "heads",
+        "severity": 0.5,
+        "position": "random",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.58,
+        "stsb_peak_semantic_rho": 0.31492518364555105,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "KV-Groups Ablated (50%)",
+        "surgery_type": "heads",
+        "severity": 0.5,
+        "position": "random",
+        "head_mode": "kv_group",
+        "blimp_syntax_accuracy": 0.64,
+        "stsb_peak_semantic_rho": 0.29585197795098,
+        "stsb_best_layer": 1
+      },
+      {
+        "condition": "Embedding Masked (25%)",
+        "surgery_type": "emb_mask",
+        "severity": 0.25,
+        "position": "random",
+        "head_mode": "q_only",
+        "blimp_syntax_accuracy": 0.74,
+        "stsb_peak_semantic_rho": 0.2714672466199461,
+        "stsb_best_layer": 0
+      }
+    ]
+  }
+}
