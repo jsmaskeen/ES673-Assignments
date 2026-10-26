@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.ipynb_checkpoints/
+data/
+results/*.npz
+results/*.csv
+brian_extensions/
+.pytest_cache/
